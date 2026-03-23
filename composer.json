@@ -1,0 +1,62 @@
+{
+    "name": "sumer5020/laravel-keycloak-guard",
+    "description": "A Keycloak Guard for Laravel — robsontenorio/laravel-keycloak-guard fork",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["keycloak", "laravel", "auth", "guard", "jwt", "oauth2", "organizations", "saas", "multitenancy"],
+    "authors": [
+        {
+            "name": "Robson Tenório",
+            "email": "robsontenorio@gmail.com"
+        },
+        {
+            "name": "Sumer Ahmed",
+            "email": "sumer5020@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "illuminate/auth": "^12.0|^13.0",
+        "illuminate/contracts": "^12.0|^13.0",
+        "illuminate/support": "^12.0|^13.0",
+        "illuminate/http": "^12.0|^13.0",
+        "illuminate/cache": "^12.0|^13.0",
+        "firebase/php-jwt": "^7.0",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.14",
+        "mockery/mockery": "^1.6",
+        "orchestra/testbench": "^10.0|^11.0",
+        "phpunit/phpunit": "^11.0|^12.0"
+    },
+    "conflict": {
+        "laravel/framework": "<12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "KeycloakGuard\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "KeycloakGuard\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "KeycloakGuard\\Providers\\KeycloakGuardServiceProvider"
+            ],
+            "aliases": {
+                "KeycloakOrg": "KeycloakGuard\\Facades\\KeycloakOrg"
+            }
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
