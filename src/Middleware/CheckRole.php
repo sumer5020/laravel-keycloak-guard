@@ -7,8 +7,8 @@ namespace KeycloakGuard\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use KeycloakGuard\Guards\KeycloakGuard;
 use KeycloakGuard\Exceptions\KeycloakGuardException;
+use KeycloakGuard\Guards\KeycloakGuard;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -16,8 +16,8 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * Usage in routes:
  *   Route::middleware('keycloak.role:admin')
- *   Route::middleware('keycloak.role:editor,moderator')         // any of these roles
- *   Route::middleware('keycloak.role:admin|my-client')          // role in specific resource
+ *   Route::middleware('keycloak.role:editor,moderator') // any of these roles
+ *   Route::middleware('keycloak.role:admin|my-client') // role in a specific resource
  */
 class CheckRole
 {
