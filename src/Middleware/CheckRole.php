@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use KeycloakGuard\Guards\KeycloakGuard;
+use KeycloakGuard\Exceptions\KeycloakGuardException;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -28,7 +29,7 @@ class CheckRole
             $guard = Auth::guard('api'); // Standard fallback
 
             if (! method_exists($guard, 'hasRole')) {
-                throw new \RuntimeException('Keycloak CheckRole middleware requires the "keycloak" guard driver.');
+                throw new KeycloakGuardException('Keycloak CheckRole middleware requires the "keycloak" guard driver.');
             }
         }
 
