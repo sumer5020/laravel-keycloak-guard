@@ -41,8 +41,8 @@ abstract class TestCase extends Orchestra
     protected function setUpConfig(): void
     {
         config([
-            'keycloak.validate.issuer' => false,
-            'keycloak.validate.audience' => false,
+            'keycloak.validate.issuer' => true,
+            'keycloak.validate.audience' => true,
             'keycloak.realm_public_key' => null,
             'keycloak.token_encryption_algorithm' => 'RS256',
             'keycloak.load_user_from_database' => true,

@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace KeycloakGuard\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use KeycloakGuard\Guards\KeycloakGuard;
 use KeycloakGuard\Exceptions\KeycloakGuardException;
+use KeycloakGuard\Guards\KeycloakGuard;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -14,8 +16,8 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * Usage in routes:
  *   Route::middleware('keycloak.role:admin')
- *   Route::middleware('keycloak.role:editor,moderator')         // any of these roles
- *   Route::middleware('keycloak.role:admin|my-client')          // role in specific resource
+ *   Route::middleware('keycloak.role:editor,moderator') // any of these roles
+ *   Route::middleware('keycloak.role:admin|my-client') // role in a specific resource
  */
 class CheckRole
 {
@@ -25,11 +27,16 @@ class CheckRole
 
         /** @var KeycloakGuard $guard */
         if (! method_exists($guard, 'hasRole')) {
-            // Attempt to find the keycloak guard if the default one is not it
-            $guard = Auth::guard('api'); // Standard fallback
+            $defaultGuard = config('auth.defaults.guard');
+
+            if (is_string($defaultGuard) && $defaultGuard !== '') {
+                $guard = Auth::guard($defaultGuard);
+            }
 
             if (! method_exists($guard, 'hasRole')) {
-                throw new KeycloakGuardException('Keycloak CheckRole middleware requires the "keycloak" guard driver.');
+                throw new KeycloakGuardException(
+                    "Configure a guard using the 'keycloak' driver in config/auth.php before using keycloak.role middleware."
+                );
             }
         }
 

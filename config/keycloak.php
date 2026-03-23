@@ -155,6 +155,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Allow Public Key Fallback to JWKS
+    |--------------------------------------------------------------------------
+    | When realm_public_key is configured and signature validation fails,
+    | optionally retry using JWKS. Disabled by default to make failures explicit.
+    */
+    'allow_public_key_jwks_fallback' => env('KEYCLOAK_ALLOW_PUBLIC_KEY_JWKS_FALLBACK', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | JWKS Cache TTL (seconds)
     |--------------------------------------------------------------------------
     | How long to cache the JWKS response. Default: 3600 (1 hour).

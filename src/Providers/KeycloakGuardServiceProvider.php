@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace KeycloakGuard\Providers;
 
 use Illuminate\Support\Facades\Auth;
@@ -25,9 +27,7 @@ class KeycloakGuardServiceProvider extends ServiceProvider
             return new TokenService($app->make(JwksService::class));
         });
 
-        $this->app->singleton(OrganizationService::class, function ($app) {
-            return new OrganizationService($app->make('request'));
-        });
+        $this->app->scoped(OrganizationService::class);
     }
 
     public function boot(): void

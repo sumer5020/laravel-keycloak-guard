@@ -22,6 +22,7 @@ class TokenServiceTest extends TestCase
     public function test_validate_issuer_success(): void
     {
         config(['keycloak.validate.issuer' => true]);
+        config(['keycloak.validate.audience' => false]);
         config(['keycloak.base_url' => 'https://keycloak.test']);
         config(['keycloak.realm' => 'test-realm']);
 
@@ -35,6 +36,7 @@ class TokenServiceTest extends TestCase
     public function test_validate_issuer_fails_on_mismatch(): void
     {
         config(['keycloak.validate.issuer' => true]);
+        config(['keycloak.validate.audience' => false]);
         config(['keycloak.base_url' => 'https://keycloak.test']);
         config(['keycloak.realm' => 'test-realm']);
 

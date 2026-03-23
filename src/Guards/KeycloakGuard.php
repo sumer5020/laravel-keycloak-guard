@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace KeycloakGuard\Guards;
 
 use Illuminate\Auth\GuardHelpers;
@@ -7,6 +9,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use KeycloakGuard\Exceptions\KeycloakGuardException;
 use KeycloakGuard\Exceptions\TokenException;
 use KeycloakGuard\Models\TokenUser;
@@ -48,12 +51,17 @@ class KeycloakGuard implements Guard
             $this->decodedToken = $this->tokenService->decode($token);
             $this->tokenService->validate($this->decodedToken);
         } catch (TokenException|KeycloakGuardException $e) {
+            Log::debug('Keycloak token validation failed', [
+                'reason' => $e->getMessage(),
+                'ip' => $this->request->ip(),
+            ]);
+
             return null;
         }
 
         // Boot Organization service with the decoded token
         if (config('keycloak.organizations.enabled', false)) {
-            $this->organizationService->boot($this->decodedToken);
+            $this->organizationService->boot($this->decodedToken, $this->request);
         }
 
         $this->user = $this->resolveUser();
