@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace KeycloakGuard\Middleware;
 
 use Closure;
@@ -25,11 +27,16 @@ class CheckRole
 
         /** @var KeycloakGuard $guard */
         if (! method_exists($guard, 'hasRole')) {
-            // Attempt to find the keycloak guard if the default one is not it
-            $guard = Auth::guard('api'); // Standard fallback
+            $defaultGuard = config('auth.defaults.guard');
+
+            if (is_string($defaultGuard) && $defaultGuard !== '') {
+                $guard = Auth::guard($defaultGuard);
+            }
 
             if (! method_exists($guard, 'hasRole')) {
-                throw new KeycloakGuardException('Keycloak CheckRole middleware requires the "keycloak" guard driver.');
+                throw new KeycloakGuardException(
+                    "Configure a guard using the 'keycloak' driver in config/auth.php before using keycloak.role middleware."
+                );
             }
         }
 

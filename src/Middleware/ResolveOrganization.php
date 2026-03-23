@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace KeycloakGuard\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use KeycloakGuard\Exceptions\OrganizationException;
 use KeycloakGuard\Facades\KeycloakOrg;
 use Symfony\Component\HttpFoundation\Response;
@@ -35,7 +38,12 @@ class ResolveOrganization
         try {
             $org = KeycloakOrg::current();
         } catch (OrganizationException $e) {
-            return response()->json(['error' => $e->getMessage()], 403);
+            Log::debug('Keycloak organization resolution failed', [
+                'reason' => $e->getMessage(),
+                'ip' => $request->ip(),
+            ]);
+
+            return response()->json(['error' => 'Forbidden. Invalid organization context.'], 403);
         }
 
         if (! $org && config('keycloak.organizations.require', false)) {

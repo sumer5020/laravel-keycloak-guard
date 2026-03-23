@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace KeycloakGuard\Services;
 
 use Illuminate\Http\Request;
@@ -15,16 +17,27 @@ class OrganizationService
     /** @var array|null The resolved active organization for this request */
     private ?array $currentOrg = null;
 
+    private ?Request $request = null;
+
     private bool $resolved = false;
 
-    public function __construct(private Request $request) {}
+    public function __construct(?Request $request = null)
+    {
+        $this->request = $request;
+    }
 
     /**
      * Boot the service with the decoded token from the current request.
      * Called once by the guard after token validation.
      */
-    public function boot(stdClass $decodedToken): void
+    public function boot(stdClass $decodedToken, ?Request $request = null): void
     {
+        if ($request) {
+            $this->request = $request;
+        } elseif (! $this->request) {
+            $this->request = app('request');
+        }
+
         $org = $decodedToken->organization ?? null;
 
         if ($org !== null) {
@@ -56,7 +69,8 @@ class OrganizationService
         }
 
         $header = config('keycloak.organizations.header', 'X-Organization');
-        $alias = $this->request->header($header);
+        $request = $this->request ?? app('request');
+        $alias = $request->header($header);
 
         if ($alias) {
             if (! isset($this->organizations[$alias])) {
@@ -171,7 +185,10 @@ class OrganizationService
 
         $rolesJson = json_encode($org['roles'] ?? []);
 
-        if (! $pivot || $pivot->roles !== $rolesJson || $pivot->updated_at->diffInMinutes(now()) > 60) {
+        $pivotUpdatedAt = $pivot?->updated_at;
+        $isStale = ! $pivotUpdatedAt || $pivotUpdatedAt->diffInMinutes(now()) > 60;
+
+        if (! $pivot || $pivot->roles !== $rolesJson || $isStale) {
             $user->organizations()->syncWithoutDetaching([
                 $organization->getKey() => [
                     'roles' => $rolesJson,

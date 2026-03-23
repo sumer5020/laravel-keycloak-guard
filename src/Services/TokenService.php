@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace KeycloakGuard\Services;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Illuminate\Support\Facades\Cache;
 use KeycloakGuard\Exceptions\TokenException;
 use stdClass;
 
@@ -30,7 +33,7 @@ class TokenService
         } catch (TokenException $e) {
             throw $e;
         } catch (\Exception $e) {
-            throw new TokenException('Token validation failed: '.$e->getMessage(), 0, $e);
+            throw new TokenException('Token validation failed.', 0, $e);
         }
     }
 
@@ -45,12 +48,15 @@ class TokenService
         try {
             return JWT::decode($token, new Key($publicKey, $algorithm));
         } catch (\Exception $e) {
-            // On failure, attempt JWKS if configured (supports rotation fallback)
-            if (config('keycloak.jwks_uri') || (config('keycloak.base_url') && config('keycloak.realm'))) {
+            // Fallback is opt-in to avoid masking static-key misconfiguration.
+            if (
+                config('keycloak.allow_public_key_jwks_fallback', false)
+                && (config('keycloak.jwks_uri') || (config('keycloak.base_url') && config('keycloak.realm')))
+            ) {
                 return $this->decodeWithJwks($token, true);
             }
 
-            throw new TokenException($e->getMessage(), (int) $e->getCode(), $e);
+            throw new TokenException('Token signature validation failed.', (int) $e->getCode(), $e);
         }
     }
 
@@ -67,12 +73,30 @@ class TokenService
         } catch (\Exception $e) {
             // If key ID mismatch, refresh JWKS once and retry (handles key rotation)
             if (! $isRetry && str_contains($e->getMessage(), 'kid')) {
-                $keys = $this->jwksService->refreshKeys();
+                $keys = $this->refreshJwksWithLock();
 
                 return JWT::decode($token, $keys);
             }
 
-            throw new TokenException($e->getMessage(), (int) $e->getCode(), $e);
+            throw new TokenException('Token signature validation failed.', (int) $e->getCode(), $e);
+        }
+    }
+
+    /**
+     * Refresh JWKS using a lock to avoid thundering-herd traffic on kid mismatch.
+     */
+    private function refreshJwksWithLock(): array
+    {
+        $uri = $this->jwksService->resolveJwksUri();
+        $lock = Cache::lock('keycloak_jwks_refresh_'.md5($uri), 30);
+
+        try {
+            return $lock->block(5, function (): array {
+                return $this->jwksService->refreshKeys();
+            });
+        } catch (\Throwable) {
+            // Fall back to currently cached keys if lock acquisition fails.
+            return $this->jwksService->getKeys();
         }
     }
 
